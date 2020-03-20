@@ -1,7 +1,7 @@
 DEVICE     = atmega328p
-CLOCK      = 7372800 
+CLOCK      = 7372800
 PROGRAMMER = -c usbtiny -P usb
-OBJECTS    = at328-0.o
+OBJECTS    = lcd_test.o lcd.o
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe0:m
 
 # Fuse Low Byte = 0xe0   Fuse High Byte = 0xd9   Fuse Extended Byte = 0xff
@@ -23,10 +23,13 @@ FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe0:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
 all:	main.hex
+
+lcd_test.o: lcd_test.c lcd.h
+lcd.o: lcd.c lcd.h
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -58,7 +61,7 @@ clean:
 	rm -f main.hex main.elf $(OBJECTS)
 
 # file targets:
-main.elf: $(OBJECTS)
+main.elf: $(OBJECTS) 
 	$(COMPILE) -o main.elf $(OBJECTS)
 
 main.hex: main.elf
