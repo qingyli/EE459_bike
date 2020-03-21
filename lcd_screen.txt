@@ -1,0 +1,12 @@
+Format of 20x4 LCD screen (Row 3 will be toggled between speed, altitude, and direction)
+
+  01234567890123456789  
+ |====================| 
+0|MM/DD/YY   HH:MM GMT|0
+1|    la* ti.tude' N  |1
+2|   lon* gi.tude' E  |2
+3|Altitude: alti.t m  |3
+3|Speed:    spee.d mph|3
+3|Direction:    NW    |3
+ |====================| 
+  01234567890123456789  

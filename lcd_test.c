@@ -1,5 +1,5 @@
 /***
-	lcd_test.c - Test's the functionality of the LCD by printing strings and changing the RGB backlight
+	lcd_test.c - Tests the functionality of the LCD by printing strings and changing the RGB backlight
 **/
 
 #include <avr/io.h>

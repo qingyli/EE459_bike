@@ -1,6 +1,9 @@
 #ifndef LCD_H
 #define LCD_H
 
+#include <avr/io.h>
+#include <util/delay.h>
+
 #define LCD_DATA_BITS ((1 << PB5)|(1 << PB4)|(1 << PB3)|(1 << PB2))
 #define LCD_DATA_OFFSET PB2
 #define LCD_RS_BIT (1 << PB0)
@@ -19,8 +22,9 @@ void lcd_init(void);
 void lcd_clear(void);
 void lcd_home(void);
 void lcd_moveto(uint8_t r, uint8_t c);
-void lcd_stringout(char *str);
-void lcd_stringnout(char *str, uint8_t max);
+void lcd_stringout(const char *str);
+void lcd_charout(char ch);
+void lcd_stringnout(const char *str, uint8_t max);
 void lcd_set_rgb(uint8_t r, uint8_t g, uint8_t b);
 
 #endif

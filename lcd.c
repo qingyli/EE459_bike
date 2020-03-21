@@ -1,6 +1,3 @@
-#include <avr/io.h>
-#include <util/delay.h>
-
 #include "lcd.h"
 
 // Private functions for lcd.c
@@ -88,7 +85,7 @@ void lcd_home(void) {
 
 /*
     Move the cursor to a specified location
-    'row': [0, 3], 'col': [0, 15]
+    'row': [0, 3], 'col': [0, 19]
 */
 void lcd_moveto(uint8_t row, uint8_t col) {
     uint8_t pos;
@@ -97,17 +94,25 @@ void lcd_moveto(uint8_t row, uint8_t col) {
 }
 
 /*
+    Write a single character to LCD
+*/
+void lcd_charout(char ch) {
+    lcd_writedata(ch);
+}
+
+/*
     Print up to 'max' amount of characters from 'str' at the current cursor location
     Will not autowrap on lcd screen
 */
-void lcd_stringnout(char *str, uint8_t max) {
+void lcd_stringnout(const char *str, uint8_t max) {
     uint8_t i = 0;
     while (str[i] != '\0' && i < max) {  // Loop until next charater is NULL byte or i==max
         lcd_writedata(str[i]);  // Send the character
         i++;
     }
 }
-void lcd_stringout(char *str) {
+
+void lcd_stringout(const char *str) {
     lcd_stringnout(str, 20);
 }
 

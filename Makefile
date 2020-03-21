@@ -1,7 +1,7 @@
 DEVICE     = atmega328p
 CLOCK      = 7372800
 PROGRAMMER = -c usbtiny -P usb
-OBJECTS    = lcd_test.o lcd.o
+OBJECTS    = gps_update_test.o lcd.o gps.o
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe0:m
 
 # Fuse Low Byte = 0xe0   Fuse High Byte = 0xd9   Fuse Extended Byte = 0xff
@@ -28,8 +28,11 @@ COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 # symbolic targets:
 all:	main.hex
 
+gps_update_test.o: gps_update_test.c gps.h lcd.h
+gps_read_test.o: gps_read_test.c gps.h lcd.h
 lcd_test.o: lcd_test.c lcd.h
 lcd.o: lcd.c lcd.h
+gps.o: gps.c gps.h
 
 .c.o:
 	$(COMPILE) -c $< -o $@
