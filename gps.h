@@ -10,9 +10,6 @@
 #define UBRR FREQ/16/BAUD-1
 #define MAX_SENTENCE_LEN 80
 
-#define PPS_PIN (1 << PC1)
-#define PPS_INTERRUPT (1 << PCINT9)
-
 #define VALID_DATE (1 << 0)
 #define VALID_TIME (1 << 1)
 #define VALID_LOC  (1 << 2)
