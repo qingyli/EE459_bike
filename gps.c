@@ -27,10 +27,12 @@ uint8_t _valid_data = 0;
 volatile uint8_t _msgs_elapsed = 0; //Tracks messages receieved since last valid location
 
 // Determines what gps_parse() should return on an error
-#define PARSE_ERROR_CODE (_msgs_elapsed >= 120)?-1:_valid_data
+#define PARSE_ERROR_CODE (_msgs_elapsed >= 60)?-1:_valid_data
 
 /*
-Format of 20x4 LCD screen (Row 3 will be toggled between speed, altitude, and direction)
+Format of 20x4 LCD screen
+Row 3 will be toggled between speed, altitude, and direction
+Rows 1&2 will switch between current position and elapsed time
 
   01234567890123456789  
  |====================| 
@@ -40,19 +42,23 @@ Format of 20x4 LCD screen (Row 3 will be toggled between speed, altitude, and di
 3|Altitude: alti.t m  |3
 3|Speed:    spee.d mph|3
 3|Direction:    NW    |3
+1|Elapsed Time:       |1
+2|      xx:xx:xx      |2
  |====================| 
   01234567890123456789  
 
 */
 
 // Note: 0xDF is the character code for displaying a degree symbol on the LCD
-char display_screen[6][21] = {
+char display_screen[8][21] = {
 	"--/--/--   --:-- GMT",
 	"    --\xDF --.----' -  ",
 	"   ---\xDF --.----' -  ",
 	"Altitude: ----.- m  ",
 	"Speed:    ----.- mph",
-	"Direction:    --    "
+	"Direction:    --    ",
+	"Elapsed Time:       ",
+	"      00:00:00      "
 };
 
 /***
@@ -69,8 +75,11 @@ void gps_init(void) {
 	gps_stringout("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\n"); // Only receive RMC and GGA sentences
 	gps_stringout("$PMTK220,1000*1F\n"); // Update at 1 Hz frequency
 	// gps_stringout("$PMTK220,200*2C\n"); // Update at 5 Hz frequency
-
 	UCSR0B |= (1 << RXCIE0); // Enable RX Interrupt
+
+	PCICR |= (1 << PCIE1); // Enable port C interrupts
+	PCMSK1 |= PPS_INTERRUPT; // Enable pin change interupt for GPS's pulse per second pin
+
 }
 
 /*
@@ -95,7 +104,7 @@ uint8_t gps_readline(char* str) {
 
 /*
 	Parse the NMEA sentence and update display_screen
-	Returns:	-1 if no valid location has been found in 120 sentences (=1 minute when receiving 2 sentences each second)
+	Returns:	-1 if no valid location has been found in 60 sentences (=30 seconds when receiving 2 sentences each second)
 				_valid_data to indicate fields in display_screen are valid
 */
 int8_t gps_parse(char* str, uint8_t length) {
@@ -508,4 +517,56 @@ int8_t hex_to_int(char c) {
     if(c >= 'a' && c <= 'f')
         return 10+(c-'a');
     return -1;
+}
+
+ISR (PCINT1_vect) {
+	if(PINC & PPS_PIN) {
+		char* elapsedStr = display_screen[7];
+		//Format of string:
+		//"      00:00:00      "
+		// 01234567890123456789
+		uint8_t updateHrs = 0;
+		uint8_t updateMins = 0;
+		// Update seconds
+		if(elapsedStr[13]=='9') {
+			elapsedStr[13]=='0';
+			if(elapsedStr[12]=='5') {
+				elapsedStr[12]=='0';
+				updateMins=1;
+			} else {
+				elapsedStr[12]++;
+			}
+		} else {
+			elapsedStr[13]++;
+		}
+
+		// Update minutes if needed
+		if(updateMins){
+			if(elapsedStr[10]=='9') {
+				elapsedStr[10]=='0';
+				if(elapsedStr[9]=='5') {
+					elapsedStr[9]=='0';
+					updateHrs=1;
+				} else {
+					elapsedStr[9]++;
+				}
+			} else {
+				elapsedStr[10]++;
+			}
+		}
+
+		// Update hours if needed, if the hour mark reaches 99 wrap back to 00
+		if(updateMins){
+			if(elapsedStr[7]=='9') {
+				elapsedStr[7]=='0';
+				if(elapsedStr[6]=='9') {
+					elapsedStr[6]=='0';
+				} else {
+					elapsedStr[6]++;
+				}
+			} else {
+				elapsedStr[7]++;
+			}
+		}
+	}
 }
