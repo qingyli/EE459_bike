@@ -25,6 +25,7 @@ volatile uint8_t _line_len = 0;
 
 uint8_t _valid_data = 0;
 volatile uint8_t _msgs_elapsed = 0; //Tracks messages receieved since last valid location
+volatile uint16_t elapsedTime = 0;
 
 // Determines what gps_parse() should return on an error
 #define PARSE_ERROR_CODE (_msgs_elapsed >= 60)?-1:_valid_data
@@ -49,16 +50,14 @@ Rows 1&2 will switch between current position and elapsed time
 
 */
 
-// Note: 0xDF is the character code for displaying a degree symbol on the LCD
-char display_screen[8][21] = {
+// 0xDF is the character code for displaying a degree symbol on the LCD
+char display_screen[6][21] = {
 	"--/--/--   --:-- GMT",
 	"    --\xDF --.----' -  ",
 	"   ---\xDF --.----' -  ",
 	"Altitude: ----.- m  ",
 	"Speed:    ----.- mph",
-	"Direction:    --    ",
-	"Elapsed Time:       ",
-	"      00:00:00      "
+	"Direction:    --    "
 };
 
 /***
@@ -519,51 +518,5 @@ int8_t hex_to_int(char c) {
 }
 
 ISR (INT0_vect) {
-	char* elapsedStr = display_screen[7];
-	//Format of string:
-	//"      00:00:00      "
-	// 01234567890123456789
-	uint8_t updateHrs = 0;
-	uint8_t updateMins = 0;
-	// Update seconds
-	if(elapsedStr[13]=='9') {
-		elapsedStr[13]=='0';
-		if(elapsedStr[12]=='5') {
-			elapsedStr[12]=='0';
-			updateMins=1;
-		} else {
-			elapsedStr[12]++;
-		}
-	} else {
-		elapsedStr[13]++;
-	}
-
-	// Update minutes if needed
-	if(updateMins){
-		if(elapsedStr[10]=='9') {
-			elapsedStr[10]=='0';
-			if(elapsedStr[9]=='5') {
-				elapsedStr[9]=='0';
-				updateHrs=1;
-			} else {
-				elapsedStr[9]++;
-			}
-		} else {
-			elapsedStr[10]++;
-		}
-	}
-
-	// Update hours if needed, if the hour mark reaches 99 wrap back to 00
-	if(updateMins){
-		if(elapsedStr[7]=='9') {
-			elapsedStr[7]=='0';
-			if(elapsedStr[6]=='9') {
-				elapsedStr[6]=='0';
-			} else {
-				elapsedStr[6]++;
-			}
-		} else {
-			elapsedStr[7]++;
-		}
-	}
+	elapsedTime++;
 }

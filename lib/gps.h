@@ -28,5 +28,5 @@ uint8_t gps_readline(char* str);
 int8_t gps_parse(char* str, uint8_t length);
 
 extern char display_screen[6][21];
-
+extern volatile uint16_t elapsedTime;
 #endif

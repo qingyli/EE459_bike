@@ -8,6 +8,12 @@
 #define LINE_CHANGE_INTERVAL 40 //2 lines are read per second, so toggles information every 20 seconds
 
 void display_wait(void);
+void update_info(void);
+void display_wait(void);
+void display_time(void);
+void display_elapsed(void);
+void display_location(void);
+void display_misc(void);
 
 char last_line[MAX_SENTENCE_LEN];
 uint8_t line_len = 0;
@@ -115,7 +121,7 @@ void display_location(void) {
 void display_misc(void) {
 	lcd_moveto(3,0);
 	lcd_stringout(display_screen[3+line3_displayed]);
-	wait_displaying = 0
+	wait_displaying = 0;
 	line3_counter++;
 }
 

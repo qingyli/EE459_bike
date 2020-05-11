@@ -1,7 +1,12 @@
+LIB = ./lib
+SRC = ./src
+TESTS = ./tests
+BIN = ./bin
+
 DEVICE     = atmega328p
 CLOCK      = 7372800
 PROGRAMMER = -c usbtiny -P usb
-OBJECTS    = gps_update_test.o lcd.o gps.o
+OBJECTS    = $(BIN)/smart_bike.o $(BIN)/lcd.o $(BIN)/gps.o $(BIN)/adc.o
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe0:m
 
 # Fuse Low Byte = 0xe0   Fuse High Byte = 0xd9   Fuse Extended Byte = 0xff
@@ -23,16 +28,33 @@ FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe0:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -I$(LIB) -I$(SRC)
 
 # symbolic targets:
-all:	main.hex
+all: main.hex
+.PHONY: all clean flash
 
-gps_update_test.o: gps_update_test.c gps.h lcd.h
-gps_read_test.o: gps_read_test.c gps.h lcd.h
-lcd_test.o: lcd_test.c lcd.h
-lcd.o: lcd.c lcd.h
-gps.o: gps.c gps.h
+smart_bike: all
+gps_update_test: OBJECTS = $(BIN)/gps_update_test.o $(BIN)/gps.o $(BIN)/lcd.o
+gps_update_test: $(BIN)/gps_update_test.o all
+gps_read_test: OBJECTS = $(BIN)/gps_read_test.o $(BIN)/gps.o $(BIN)/lcd.o
+gps_read_test: $(BIN)/gps_read_test.o all
+lcd_test: OBJECTS = $(BIN)/lcd_test.o $(BIN)/lcd.o
+lcd_test: $(BIN)/lcd_test.o all
+
+$(BIN)/smart_bike.o: $(SRC)/smart_bike.c $(LIB)/gps.h $(LIB)/lcd.h $(LIB)/adc.h
+$(BIN)/gps_update_test.o: $(TESTS)/gps_update_test.c $(LIB)/gps.h $(LIB)/lcd.h
+$(BIN)/gps_read_test.o: $(TESTS)/gps_read_test.c $(LIB)/gps.h $(LIB)/lcd.h
+$(BIN)/lcd_test.o: $(TESTS)/lcd_test.c $(LIB)/lcd.h
+$(BIN)/lcd.o: $(SRC)/lcd.c $(LIB)/lcd.h
+$(BIN)/gps.o: $(SRC)/gps.c $(LIB)/gps.h
+$(BIN)/adc.o: $(SRC)/adc.c $(LIB)/adc.h
+
+$(BIN)/%.o: $(SRC)/%.c
+	$(COMPILE) -c $< -o $@
+
+$(BIN)/%.o: $(TESTS)/%.c
+	$(COMPILE) -c $< -o $@
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -61,10 +83,11 @@ load: all
 	bootloadHID main.hex
 
 clean:
-	rm -f main.hex main.elf $(OBJECTS)
+	rm -f main.hex main.elf $(wildcard $(BIN)/*)
 
 # file targets:
-main.elf: $(OBJECTS) 
+main.elf: .FORCE
+	$(MAKE) $(OBJECTS)
 	$(COMPILE) -o main.elf $(OBJECTS)
 
 main.hex: main.elf
@@ -80,3 +103,5 @@ disasm:	main.elf
 
 cpp:
 	$(COMPILE) -E main.c
+
+.FORCE:
